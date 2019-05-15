@@ -48,7 +48,12 @@ class TwoLayerNet(object):
         # weights and biases using the keys 'W2' and 'b2'.                         #
         ############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-
+    
+        self.params['W1'] = (np.random.normal(scale=weight_scale, size=(input_dim, hidden_dim)))
+        self.params['b1'] = np.zeros((hidden_dim))
+        self.params['W2'] = (np.random.normal(scale=weight_scale, size=(hidden_dim, num_classes)))
+        self.params['b2'] = np.zeros((num_classes))
+        
         pass
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
@@ -82,6 +87,12 @@ class TwoLayerNet(object):
         # class scores for X and storing them in the scores variable.              #
         ############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
+        #print('x', X.shape, X)
+        out1, cache1 = affine_relu_forward(X, self.params['W1'], self.params['b1'])
+        #print('out1', out1.shape)
+        out2, cache2 = affine_forward(out1, self.params['W2'], self.params['b2'])
+        #print('out2', out2.shape)
+        scores = out2
 
         pass
 
@@ -95,6 +106,7 @@ class TwoLayerNet(object):
             return scores
 
         loss, grads = 0, {}
+        
         ############################################################################
         # TODO: Implement the backward pass for the two-layer net. Store the loss  #
         # in the loss variable and gradients in the grads dictionary. Compute data #
@@ -106,7 +118,32 @@ class TwoLayerNet(object):
         # of 0.5 to simplify the expression for the gradient.                      #
         ############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-
+        
+        loss, dout = softmax_loss(out2, y)
+        #print('loss', loss)
+        #print('dout', dout.shape)
+        regularization = self.reg * 0.5 * np.sum(
+            np.square(
+                np.concatenate(
+                    (
+                        self.params['W1'].reshape(-1), 
+                        self.params['W2'].reshape(-1),
+#                         self.params['b1'].reshape(-1), 
+#                         self.params['b2'].reshape(-1)
+                    )
+                )
+            )
+        )
+        #print('regularization', regularization)
+        loss += regularization
+        dx, dw, db = affine_backward(dout, cache2)
+        grads['W2'] = dw
+        grads['b2'] = db
+        #print('affine2 dx', dx.shape)
+        dx, dw, db = affine_relu_backward(dx, cache1)
+        grads['W1'] = dw
+        grads['b1'] = db
+        
         pass
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
